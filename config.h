@@ -197,6 +197,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_Page_Down,	shifttag,	{ .i = +1 } },
 	{ MODKEY,			XK_space,	zoom,		{0} },
 	{ MODKEY|ShiftMask,		XK_space,	togglefloating,	{0} },
+	{ MODKEY, XK_d, spawn, {.v = (const char*[]){ "dmenu_run", NULL } } },
 	{ MODKEY|ShiftMask, XK_v, spawn, SHCMD("choice=$(cat ~/.dmenu_paste_list | dmenu -i -p 'Paste:'); if [ -n \"$choice\" ]; then printf \"%s\" \"$choice\" | xclip -selection clipboard; printf \"%s\" \"$choice\" | xclip -selection primary; xdotool key --clearmodifiers Shift+Insert; fi") },
 };
 
