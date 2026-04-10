@@ -61,6 +61,7 @@ static const Rule rules[] = {
 static float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
 static int nmaster     = 1;    /* number of clients in master area */
 static int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
+static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 #define FORCE_VSPLIT 1  /* nrowgrid layout: force two clients to always split vertically */
 #include "vanitygaps.c"
 static const Layout layouts[] = {
@@ -130,7 +131,7 @@ ResourcePref resources[] = {
 
 #include "shiftview.c"
 
-static Key keys[] = {
+static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	STACKKEYS(MODKEY,                          focus)
 	STACKKEYS(MODKEY|ShiftMask,                push)
@@ -201,7 +202,9 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask, XK_v, spawn, SHCMD("choice=$(cat ~/.dmenu_paste_list | dmenu -i -p 'Paste:'); if [ -n \"$choice\" ]; then printf \"%s\" \"$choice\" | xclip -selection clipboard; printf \"%s\" \"$choice\" | xclip -selection primary; xdotool key --clearmodifiers Shift+Insert; fi") },
 };
 
-static Button buttons[] = {
+/* button definitions */
+/* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
+static const Button buttons[] = {
 	/* click                event mask      button          function        argument */
 #ifndef __OpenBSD__
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
