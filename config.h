@@ -100,6 +100,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *termcmd[]  = { TERMINAL, NULL };
+static const char *screenresetcmd[] = { "dwm-screens", NULL };
 
 /*
  * Xresources preferences to load at startup
@@ -149,7 +150,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_BackSpace,	spawn,		{.v = (const char*[]){ "sysact", NULL } } },
 	{ MODKEY,			XK_Tab,		view,		{0} },
 	{ MODKEY,			XK_q,		killclient,	{0} },
-	{ MODKEY|ShiftMask,		XK_q,		quit,		{.i = 1} },
+	{ MODKEY|ShiftMask,		XK_q,		restartwm,	{.v = screenresetcmd} },
 	{ MODKEY,			XK_o,		incnmaster,     {.i = +1 } },
 	{ MODKEY|ShiftMask,		XK_o,		incnmaster,     {.i = -1 } },
 

@@ -229,7 +229,9 @@ static void resize(Client *c, int x, int y, int w, int h, int interact);
 static void resizeclient(Client *c, int x, int y, int w, int h);
 static void resizemouse(const Arg *arg);
 static void restack(Monitor *m);
+static void restartwm(const Arg *arg);
 static void run(void);
+static void runcommand(const Arg *arg);
 static void runAutostart(void);
 static void scan(void);
 static int sendevent(Client *c, Atom proto);
@@ -1588,6 +1590,14 @@ restack(Monitor *m)
 }
 
 void
+restartwm(const Arg *arg)
+{
+	if (arg->v)
+		runcommand(arg);
+	quit(&(Arg){.i = 1});
+}
+
+void
 run(void)
 {
 	XEvent ev;
@@ -1596,6 +1606,23 @@ run(void)
 	while (running && !XNextEvent(dpy, &ev))
 		if (handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
+}
+
+void
+runcommand(const Arg *arg)
+{
+	pid_t pid;
+
+	if ((pid = fork()) == 0) {
+		if (dpy)
+			close(ConnectionNumber(dpy));
+		setsid();
+		execvp(((char **)arg->v)[0], (char **)arg->v);
+		die("dwm: execvp '%s' failed:", ((char **)arg->v)[0]);
+	} else if (pid > 0) {
+		while (waitpid(pid, NULL, 0) == -1 && errno == EINTR)
+			;
+	}
 }
 
 void

@@ -1,0 +1,36 @@
+#!/bin/sh
+
+XRANDR=${XRANDR:-xrandr}
+
+connected=$("$XRANDR" --query | awk '$2 == "connected" { print $1 }')
+[ -n "$connected" ] || exit 0
+
+for output in $("$XRANDR" --query | awk '$2 == "disconnected" { print $1 }'); do
+	"$XRANDR" --output "$output" --off >/dev/null 2>&1 || true
+done
+
+if [ "$(printf '%s\n' "$connected" | awk 'NF { count++ } END { print count + 0 }')" -eq 1 ]; then
+	primary=$(printf '%s\n' "$connected" | awk 'NF { print; exit }')
+	"$XRANDR" --output "$primary" --auto --primary --pos 0x0
+	exit 0
+fi
+
+ordered=$(
+	{
+		printf '%s\n' "$connected" | awk '/^(DP|DisplayPort)/ { print }'
+		printf '%s\n' "$connected" | awk '/^HDMI/ { print }'
+		printf '%s\n' "$connected"
+	} | awk 'NF && !seen[$0]++'
+)
+
+primary=$(printf '%s\n' "$ordered" | awk 'NF { print; exit }')
+
+"$XRANDR" --output "$primary" --auto --primary --pos 0x0
+previous=$primary
+
+for output in $ordered; do
+	[ "$output" = "$primary" ] && continue
+	if "$XRANDR" --output "$output" --auto --right-of "$previous"; then
+		previous=$output
+	fi
+done
