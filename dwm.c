@@ -1046,7 +1046,7 @@ int
 getdwmblockspid()
 {
 	char buf[16];
-	FILE *fp = popen("pidof -s dwmblocks", "r");
+	FILE *fp = popen("pidof -s slstatus", "r");
 	fgets(buf, sizeof(buf), fp);
 	pid_t pid = strtoul(buf, NULL, 10);
 	pclose(fp);
@@ -1627,7 +1627,7 @@ runcommand(const Arg *arg)
 
 void
 runAutostart(void) {
-	system("killall -q dwmblocks; dwmblocks &");
+	system("killall -q slstatus; slstatus &");
 }
 
 void
