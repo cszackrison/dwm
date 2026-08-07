@@ -23,10 +23,19 @@ static char normfgcolor[]           = "#bbbbbb";
 static char selfgcolor[]            = "#eeeeee";
 static char selbordercolor[]        = "#c2185b";
 static char selbgcolor[]            = "#c2185b";
+static char statusfgcolor[]         = "#eeeeee";
+static char agentsbgcolor[]         = "#C2185B";
+static char claudebgcolor[]         = "#B01653";
+static char openaibgcolor[]         = "#A0144B";
+static char systembgcolor[]         = "#911244";
 static char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
        [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+       [SchemeAgents] = { statusfgcolor, agentsbgcolor, agentsbgcolor },
+       [SchemeClaude] = { statusfgcolor, claudebgcolor, claudebgcolor },
+       [SchemeOpenAI] = { statusfgcolor, openaibgcolor, openaibgcolor },
+       [SchemeSystem] = { statusfgcolor, systembgcolor, systembgcolor },
 };
 
 typedef struct {

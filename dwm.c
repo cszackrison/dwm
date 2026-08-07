@@ -72,7 +72,8 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeAgents, SchemeClaude, SchemeOpenAI,
+	   SchemeSystem }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
@@ -190,7 +191,7 @@ static void clientmessage(XEvent *e);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
-static void copyvalidchars(char *text, char *rawtext);
+static void copyvalidchars(char *text, const char *rawtext);
 static Monitor *createmon(void);
 static void destroynotify(XEvent *e);
 static void detach(Client *c);
@@ -198,6 +199,7 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
+static int drawstatus(int x, const char *text);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
@@ -245,6 +247,8 @@ static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
+static int statusscheme(unsigned char signal);
+static int statuswidth(const char *text);
 #ifndef __OpenBSD__
 static int getdwmblockspid();
 static void sigdwmblocks(const Arg *arg);
@@ -574,7 +578,7 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
 			click = ClkLtSymbol;
-		else if (ev->x > (x = selmon->ww - (int)TEXTW(stext) + lrpad)) {
+		else if (ev->x > (x = selmon->ww - statuswidth(rawstext))) {
 			click = ClkStatusText;
 
 			char *text = rawstext;
@@ -781,7 +785,7 @@ configurerequest(XEvent *e)
 }
 
 void
-copyvalidchars(char *text, char *rawtext)
+copyvalidchars(char *text, const char *rawtext)
 {
 	int i = -1, j = 0;
 
@@ -879,9 +883,8 @@ drawbar(Monitor *m)
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
-		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+		tw = statuswidth(rawstext);
+		drawstatus(m->ww - tw, rawstext);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -916,6 +919,62 @@ drawbar(Monitor *m)
 		}
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+}
+
+int
+drawstatus(int x, const char *text)
+{
+	char segment[sizeof(rawstext)];
+	size_t i, used = 0;
+	unsigned char signal = 0;
+	int width;
+
+	for (i = 0;; i++) {
+		if (!text[i] || (unsigned char)text[i] < ' ') {
+			segment[used] = '\0';
+			width = drw_fontset_getwidth(drw, segment);
+			if (!text[i])
+				width += 2;
+			if (width) {
+				drw_setscheme(drw, scheme[statusscheme(signal)]);
+				drw_text(drw, x, 0, width, bh, 0, segment, 0);
+				x += width;
+			}
+			used = 0;
+			if (!text[i])
+				break;
+			signal = (unsigned char)text[i];
+		} else if (used + 1 < sizeof(segment)) {
+			segment[used++] = text[i];
+		}
+	}
+	return x;
+}
+
+int
+statusscheme(unsigned char signal)
+{
+	switch (signal) {
+	case 1: return SchemeSystem;
+	case 2: return SchemeSystem;
+	case 3: return SchemeSystem;
+	case 4: return SchemeSystem;
+	case 5: return SchemeAgents;
+	case 6: return SchemeClaude;
+	case 7: return SchemeOpenAI;
+	case 8: return SchemeSystem;
+	case 9: return SchemeSystem;
+	default: return SchemeNorm;
+	}
+}
+
+int
+statuswidth(const char *text)
+{
+	char clean[sizeof(rawstext)];
+
+	copyvalidchars(clean, text);
+	return drw_fontset_getwidth(drw, clean) + 2;
 }
 
 void
@@ -2345,9 +2404,8 @@ void
 updatestatus(void)
 {
 	if (!gettextprop(root, XA_WM_NAME, rawstext, sizeof(rawstext)))
-		strcpy(stext, "dwm-"VERSION);
-	else
-		copyvalidchars(stext, rawstext);
+		strcpy(rawstext, "dwm-"VERSION);
+	copyvalidchars(stext, rawstext);
 	drawbar(selmon);
 }
 
