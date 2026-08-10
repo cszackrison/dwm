@@ -24,18 +24,17 @@ static char selfgcolor[]            = "#eeeeee";
 static char selbordercolor[]        = "#c2185b";
 static char selbgcolor[]            = "#c2185b";
 static char statusfgcolor[]         = "#eeeeee";
-static char agentsbgcolor[]         = "#C2185B";
-static char claudebgcolor[]         = "#B01653";
-static char openaibgcolor[]         = "#A0144B";
-static char systembgcolor[]         = "#911244";
+static const unsigned int statusshade = 91;
+static char statusbgcolors[SchemeLast - SchemeAgents][8];
 static char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
        [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
-       [SchemeAgents] = { statusfgcolor, agentsbgcolor, agentsbgcolor },
-       [SchemeClaude] = { statusfgcolor, claudebgcolor, claudebgcolor },
-       [SchemeOpenAI] = { statusfgcolor, openaibgcolor, openaibgcolor },
-       [SchemeSystem] = { statusfgcolor, systembgcolor, systembgcolor },
+       [SchemeAgents] = { statusfgcolor, statusbgcolors[0], statusbgcolors[0] },
+       [SchemeClaude] = { statusfgcolor, statusbgcolors[1], statusbgcolors[1] },
+       [SchemeOpenAI] = { statusfgcolor, statusbgcolors[2], statusbgcolors[2] },
+       [SchemeOpenCode] = { statusfgcolor, statusbgcolors[3], statusbgcolors[3] },
+       [SchemeSystem] = { statusfgcolor, statusbgcolors[4], statusbgcolors[4] },
 };
 
 typedef struct {

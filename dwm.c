@@ -73,7 +73,7 @@
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeAgents, SchemeClaude, SchemeOpenAI,
-	   SchemeSystem }; /* color schemes */
+	   SchemeOpenCode, SchemeSystem, SchemeLast }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
@@ -247,6 +247,7 @@ static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
+static void statuscolors(void);
 static int statusscheme(unsigned char signal);
 static int statuswidth(const char *text);
 #ifndef __OpenBSD__
@@ -951,6 +952,23 @@ drawstatus(int x, const char *text)
 	return x;
 }
 
+static void
+statuscolors(void)
+{
+	unsigned int blue, green, i, red;
+
+	if (!statusshade || statusshade > 100 || strlen(selbgcolor) != 7 ||
+	    sscanf(selbgcolor, "#%2x%2x%2x", &red, &green, &blue) != 3)
+		die("invalid status color configuration");
+	for (i = 0; i < LENGTH(statusbgcolors); i++) {
+		snprintf(statusbgcolors[i], sizeof(statusbgcolors[i]),
+		         "#%02x%02x%02x", red, green, blue);
+		red = (red * statusshade + 50) / 100;
+		green = (green * statusshade + 50) / 100;
+		blue = (blue * statusshade + 50) / 100;
+	}
+}
+
 int
 statusscheme(unsigned char signal)
 {
@@ -964,6 +982,7 @@ statusscheme(unsigned char signal)
 	case 7: return SchemeOpenAI;
 	case 8: return SchemeSystem;
 	case 9: return SchemeSystem;
+	case 11: return SchemeOpenCode;
 	default: return SchemeNorm;
 	}
 }
@@ -1934,6 +1953,7 @@ setup(void)
 	cursor[CurResize] = drw_cur_create(drw, XC_sizing);
 	cursor[CurMove] = drw_cur_create(drw, XC_fleur);
 	/* init appearance */
+	statuscolors();
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], 3);
