@@ -69,11 +69,12 @@
 #define SPTAGMASK		(((1 << LENGTH(scratchpads))-1) << LENGTH(tags))
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define TRUNC(X,A,B)            (MAX((A), MIN((X), (B))))
+#define STATUS_COLOR_COUNT      16
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel, SchemeAgents, SchemeClaude, SchemeOpenAI,
-	   SchemeOpenCode, SchemeSystem, SchemeLast }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeStatus,
+	   SchemeLast = SchemeStatus + STATUS_COLOR_COUNT }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
@@ -106,7 +107,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, issticky;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, issticky, istopright, isautoclose;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -161,6 +162,8 @@ typedef struct {
 	int isterminal;
 	int noswallow;
 	int monitor;
+	int istopright;
+	int isautoclose;
 } Rule;
 
 /* Xresources preferences */
@@ -188,6 +191,7 @@ static void checkotherwm(void);
 static void cleanup(void);
 static void cleanupmon(Monitor *mon);
 static void clientmessage(XEvent *e);
+static void closeclient(Client *c);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
@@ -298,8 +302,8 @@ static pid_t winpid(Window w);
 
 /* variables */
 static const char broken[] = "broken";
-static char stext[256];
-static char rawstext[256];
+static char stext[2048];
+static char rawstext[2048];
 static int dwmblockssig;
 pid_t dwmblockspid = 0;
 static int screen;
@@ -368,6 +372,8 @@ applyrules(Client *c)
 			c->isterminal = r->isterminal;
 			c->isfloating = r->isfloating;
 			c->noswallow  = r->noswallow;
+			c->istopright = r->istopright;
+			c->isautoclose = r->isautoclose;
 			c->tags |= r->tags;
 			if ((r->tags & SPTAGMASK) && r->isfloating) {
 				c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
@@ -972,17 +978,20 @@ statuscolors(void)
 int
 statusscheme(unsigned char signal)
 {
+	if (signal >= 12 && signal <= 21)
+		return SchemeStatus + signal - 6;
 	switch (signal) {
-	case 1: return SchemeSystem;
-	case 2: return SchemeSystem;
-	case 3: return SchemeSystem;
-	case 4: return SchemeSystem;
-	case 5: return SchemeAgents;
-	case 6: return SchemeClaude;
-	case 7: return SchemeOpenAI;
-	case 8: return SchemeSystem;
-	case 9: return SchemeSystem;
-	case 11: return SchemeOpenCode;
+	case 1: return SchemeStatus + 5;
+	case 2: return SchemeStatus + 5;
+	case 3: return SchemeStatus + 5;
+	case 4: return SchemeStatus + 5;
+	case 5: return SchemeStatus;
+	case 6: return SchemeStatus + 1;
+	case 7: return SchemeStatus + 2;
+	case 8: return SchemeStatus + 5;
+	case 9: return SchemeStatus + 5;
+	case 10: return SchemeStatus + 3;
+	case 11: return SchemeStatus + 4;
 	default: return SchemeNorm;
 	}
 }
@@ -1269,19 +1278,25 @@ keypress(XEvent *e)
 }
 
 void
-killclient(const Arg *arg)
+closeclient(Client *c)
 {
-	if (!selmon->sel)
-		return;
-	if (!sendevent(selmon->sel, wmatom[WMDelete])) {
+	if (!sendevent(c, wmatom[WMDelete])) {
 		XGrabServer(dpy);
 		XSetErrorHandler(xerrordummy);
 		XSetCloseDownMode(dpy, DestroyAll);
-		XKillClient(dpy, selmon->sel->win);
+		XKillClient(dpy, c->win);
 		XSync(dpy, False);
 		XSetErrorHandler(xerror);
 		XUngrabServer(dpy);
 	}
+}
+
+void
+killclient(const Arg *arg)
+{
+	if (!selmon->sel)
+		return;
+	closeclient(selmon->sel);
 }
 
 void
@@ -1326,8 +1341,13 @@ manage(Window w, XWindowAttributes *wa)
 	updatewindowtype(c);
 	updatesizehints(c);
 	updatewmhints(c);
-	c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
-	c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
+	if (c->istopright) {
+		c->x = c->mon->wx + c->mon->ww - WIDTH(c) - 4;
+		c->y = c->mon->wy;
+	} else {
+		c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
+		c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
+	}
 	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
 	grabbuttons(c, 0);
 	if (!c->isfloating)
@@ -2175,6 +2195,8 @@ unfocus(Client *c, int setfocus)
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 	}
+	if (c->isautoclose)
+		closeclient(c);
 }
 
 void

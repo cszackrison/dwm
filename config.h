@@ -25,16 +25,27 @@ static char selbordercolor[]        = "#c2185b";
 static char selbgcolor[]            = "#c2185b";
 static char statusfgcolor[]         = "#eeeeee";
 static const unsigned int statusshade = 91;
-static char statusbgcolors[SchemeLast - SchemeAgents][8];
+static char statusbgcolors[STATUS_COLOR_COUNT][8];
 static char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
        [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
-       [SchemeAgents] = { statusfgcolor, statusbgcolors[0], statusbgcolors[0] },
-       [SchemeClaude] = { statusfgcolor, statusbgcolors[1], statusbgcolors[1] },
-       [SchemeOpenAI] = { statusfgcolor, statusbgcolors[2], statusbgcolors[2] },
-       [SchemeOpenCode] = { statusfgcolor, statusbgcolors[3], statusbgcolors[3] },
-       [SchemeSystem] = { statusfgcolor, statusbgcolors[4], statusbgcolors[4] },
+       [SchemeStatus + 0] = { statusfgcolor, statusbgcolors[0], statusbgcolors[0] },
+       [SchemeStatus + 1] = { statusfgcolor, statusbgcolors[1], statusbgcolors[1] },
+       [SchemeStatus + 2] = { statusfgcolor, statusbgcolors[2], statusbgcolors[2] },
+       [SchemeStatus + 3] = { statusfgcolor, statusbgcolors[3], statusbgcolors[3] },
+       [SchemeStatus + 4] = { statusfgcolor, statusbgcolors[4], statusbgcolors[4] },
+       [SchemeStatus + 5] = { statusfgcolor, statusbgcolors[5], statusbgcolors[5] },
+       [SchemeStatus + 6] = { statusfgcolor, statusbgcolors[6], statusbgcolors[6] },
+       [SchemeStatus + 7] = { statusfgcolor, statusbgcolors[7], statusbgcolors[7] },
+       [SchemeStatus + 8] = { statusfgcolor, statusbgcolors[8], statusbgcolors[8] },
+       [SchemeStatus + 9] = { statusfgcolor, statusbgcolors[9], statusbgcolors[9] },
+       [SchemeStatus + 10] = { statusfgcolor, statusbgcolors[10], statusbgcolors[10] },
+       [SchemeStatus + 11] = { statusfgcolor, statusbgcolors[11], statusbgcolors[11] },
+       [SchemeStatus + 12] = { statusfgcolor, statusbgcolors[12], statusbgcolors[12] },
+       [SchemeStatus + 13] = { statusfgcolor, statusbgcolors[13], statusbgcolors[13] },
+       [SchemeStatus + 14] = { statusfgcolor, statusbgcolors[14], statusbgcolors[14] },
+       [SchemeStatus + 15] = { statusfgcolor, statusbgcolors[15], statusbgcolors[15] },
 };
 
 typedef struct {
@@ -57,12 +68,13 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	*/
-	/* class    instance      title       	 tags mask    isfloating   isterminal  noswallow  monitor */
-	{ TERMCLASS,  NULL,       NULL,       	    0,            0,           1,         0,        -1 },
-	{ NULL,       NULL,       "Event Tester",   0,            0,           0,         1,        -1 },
-	{ TERMCLASS,      "bg",        NULL,       	    1 << 7,       0,           1,         0,        -1 },
-	{ TERMCLASS,      "spterm",    NULL,       	    SPTAG(0),     1,           1,         0,        -1 },
-	{ TERMCLASS,      "spcalc",    NULL,       	    SPTAG(1),     1,           1,         0,        -1 },
+	/* class    instance      title       	 tags mask    isfloating   isterminal  noswallow  monitor  istopright  isautoclose */
+	{ TERMCLASS,  NULL,       NULL,       	    0,            0,           1,         0,        -1,      0,          0 },
+	{ NULL,       NULL,       "Event Tester",   0,            0,           0,         1,        -1,      0,          0 },
+	{ TERMCLASS,      "bg",        NULL,       	    1 << 7,       0,           1,         0,        -1,      0,          0 },
+	{ TERMCLASS,      "spterm",    NULL,       	    SPTAG(0),     1,           1,         0,        -1,      0,          0 },
+	{ TERMCLASS,      "spcalc",    NULL,       	    SPTAG(1),     1,           1,         0,        -1,      0,          0 },
+	{ "SlstatusPopup", NULL,       NULL,            0,            1,           1,         1,        -1,      1,          1 },
 };
 
 /* layout(s) */
