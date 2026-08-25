@@ -107,7 +107,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, issticky, istopright, isautoclose;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, issticky, istopright, isautoclose, isautohide;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -164,6 +164,7 @@ typedef struct {
 	int monitor;
 	int istopright;
 	int isautoclose;
+	int isautohide;
 } Rule;
 
 /* Xresources preferences */
@@ -219,6 +220,7 @@ static void grabkeys(void);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
+static void leavenotify(XEvent *e);
 static void manage(Window w, XWindowAttributes *wa);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
@@ -322,6 +324,7 @@ static void (*handler[LASTEvent]) (XEvent *) = {
 	[Expose] = expose,
 	[FocusIn] = focusin,
 	[KeyPress] = keypress,
+	[LeaveNotify] = leavenotify,
 	[MappingNotify] = mappingnotify,
 	[MapRequest] = maprequest,
 	[MotionNotify] = motionnotify,
@@ -374,6 +377,7 @@ applyrules(Client *c)
 			c->noswallow  = r->noswallow;
 			c->istopright = r->istopright;
 			c->isautoclose = r->isautoclose;
+			c->isautohide = r->isautohide;
 			c->tags |= r->tags;
 			if ((r->tags & SPTAGMASK) && r->isfloating) {
 				c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
@@ -1278,6 +1282,18 @@ keypress(XEvent *e)
 }
 
 void
+leavenotify(XEvent *e)
+{
+	Client *c;
+	XCrossingEvent *ev = &e->xcrossing;
+
+	if (ev->mode != NotifyNormal || ev->detail == NotifyInferior)
+		return;
+	if ((c = wintoclient(ev->window)) && c->isautohide)
+		closeclient(c);
+}
+
+void
 closeclient(Client *c)
 {
 	if (!sendevent(c, wmatom[WMDelete])) {
@@ -1348,7 +1364,7 @@ manage(Window w, XWindowAttributes *wa)
 		c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
 		c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
 	}
-	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
+	XSelectInput(dpy, w, EnterWindowMask|LeaveWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
 	grabbuttons(c, 0);
 	if (!c->isfloating)
 		c->isfloating = c->oldstate = trans != None || c->isfixed;
