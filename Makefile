@@ -7,13 +7,7 @@ SRC = drw.c dwm.c util.c
 SCRIPTS = dwm-screens
 OBJ = ${SRC:.c=.o}
 
-all: options dwm
-
-options:
-	@echo dwm build options:
-	@echo "CFLAGS   = ${CFLAGS}"
-	@echo "LDFLAGS  = ${LDFLAGS}"
-	@echo "CC       = ${CC}"
+all: dwm
 
 .c.o:
 	${CC} -c ${CFLAGS} $<
@@ -53,4 +47,4 @@ uninstall:
 		${DESTDIR}${PREFIX}/share/dwm/larbs.mom\
 		${DESTDIR}${MANPREFIX}/man1/dwm.1
 
-.PHONY: all options clean dist install uninstall
+.PHONY: all clean dist install uninstall
