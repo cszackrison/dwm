@@ -176,7 +176,7 @@ static const Key keys[] = {
 	{ MODKEY,			XK_o,		incnmaster,     {.i = +1 } },
 	{ MODKEY|ShiftMask,		XK_o,		incnmaster,     {.i = -1 } },
 
-	{ MODKEY,			XK_s,		spawn,		SHCMD("scrot -s -e 'xclip -selection clipboard -t image/png -i $f'") },
+	{ MODKEY,			XK_s,		spawn,		SHCMD("scrot -s \"$HOME/Pictures/screenshots/\"'%Y-%m-%d-%H%M%S_$wx$h_scrot.png' -e 'xclip -selection clipboard -t image/png -i $f'") },
 	{ MODKEY,			XK_f,		togglefullscr,	{0} },
 	{ MODKEY,			XK_h,		setmfact,	{.f = -0.05} },
 	/* J and K are automatically bound above in STACKEYS */
